@@ -73,4 +73,5 @@
 ・アドレス：https://github.com/yakinaga/CC_Generator.git
 ・作業場所：
 	Mac：/Users/akinaga/Work/CC_Generator
-	Win：
+	Win：/cygdrive/c/Users/akinaga/Documents/Projects/NTChem_CC_3/CC_Generator
+
