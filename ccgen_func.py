@@ -26,7 +26,7 @@ def ReadDiagrams(infile):
     
 
 def SetupTensor(T):
-    """13-integer description(string)からTensorインスタンスを生成"""
+    """1-もしくは3-integer description（文字列形式）からTensorインスタンスを生成"""
 
     tensor = Tensor()
     T = T[0].split(",")
@@ -98,7 +98,7 @@ def FactorizeDiagrams(Diagrams):
     DiagramGroups = []
 
     # 一意なT1をリストアップ
-    T1set = [Diagrams[0].T1]
+    T1set = []
     for diagram in Diagrams:
         if not (diagram.T1 in T1set): T1set.append(diagram.T1)
 
