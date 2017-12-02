@@ -64,7 +64,7 @@ class Diagram:
         self.T3 = T3
         self.T4 = T4
         self.T5 = T5
-        self.weight = weight      # parity (sign) is involved
+#        self.weight = weight      # parity (sign) is involved
 
         
     def compact(self):
@@ -86,7 +86,27 @@ class Diagram:
 
         return self
 
-    
+
+#    def set_weight_and_parity(self):
+#        """等価なTensor対の数から重み因子を求め、メンバ変数にセット
+#        Parityを求め、メンバ変数にセット"""
+#
+#        # Weight factor
+#        weight = 0
+#        tmp = [self.T1, self.T2, self.T3, self.T4, self.T5]
+#        for T1 in tmp:
+#            if T1.none: continue
+#            for T2 in tmp[:tmp.index(T1)]:
+#                if T1 == T2: weight += 1
+#
+#        self.weight = weight
+#
+#        # Parity
+#        parity = 0
+#
+#        self.pariry = parity
+                
+
     def show(self):
         """ダイアグラムを出力"""
         return self.T1.to_string()+"/"+self.T2.to_string()+"/"+ \

@@ -119,3 +119,61 @@ def InitArray(name, size):
     """配列初期化コードの生成"""
 
     
+
+def Contraction(T1, T2, V):
+    """contraction: V += T1 * T2"""
+
+    # contractionのタイプごとに個別関数を実行
+    typ1 = T1.typ
+    typ2 = T2.typ
+
+    if   typ1 == "T" and (typ2 == "I" or typ2 == "IT"):
+        Contraction1(T1, T2, V)
+    elif typ1 == "" and typ2 == "":
+        #
+    elif typ1 == "" and typ2 == "":
+        #
+    elif typ1 == "" and typ2 == "":
+        #
+    elif typ1 == "" and typ2 == "":
+        #
+    elif typ1 == "" and typ2 == "":
+        #
+
+
+
+def Contraction1(T, W, V):
+    """T + IT type contraction"""
+
+    # W~ intermediate
+    nB = W.nC - V.nC
+    nJ = W.nK - V.nK
+    W_ = Tensor()
+    W_.setup(W.nA, W.nI, W.nC-nB, W.nK-nJ, nB, nJ, W.typ)
+    
+    # rearrange W
+    Rearrange(W, W_)
+
+    # contraction
+
+
+
+    
+
+def Contraction2(T1, T2, V):
+    """ type contraction"""
+
+    
+def Contraction3(T1, T2, V):
+    """ type contraction"""
+
+    
+def Contraction4(T1, T2, V):
+    """ type contraction"""
+
+    
+def rearrange(T1, T2):
+    """Rearrange tensor"""
+
+    if nI > 0: # write DO AddI = 1, LenStringOcc
+    if nA > 0: # write DO AddA = 1, LenStringVir

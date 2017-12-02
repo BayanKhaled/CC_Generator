@@ -30,14 +30,13 @@ elif ManifoldLv == 4: mainsrc += "t4_autogen.f90"
 # メインソースファイルを開く
 fout = open(mainsrc, "w")
 
-# Read sorted diagrams from file
+# ソート済みダイアグラムのリストをファイルから読み込む
 D = ReadDiagrams("diagrams.sort")
-print(D)
 
-# Setup instances    
+# 読み込んだダイアグラムからインスタンス作成
 Diagrams = SetupDiagrams(D)
 
-# Factorize diagrams
+# ダイグラムをfactorize
 DGroups = FactorizeDiagrams(Diagrams)
 
 # main loop #
