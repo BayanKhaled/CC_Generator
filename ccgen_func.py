@@ -3,7 +3,7 @@ from ccgen_classdef import *
 
 """関数群"""
 
-def ReadDiagrams(infile):
+def readDiagrams(infile):
     """ファイルからダイアグラムを読み取ってリストに保存
     ファイル形式：
     L1:m11,m12,m13/m21,m22,m23/m31,m32,m33/m41,m42,m43/m5/pw
@@ -75,7 +75,7 @@ def SetupTensor(T):
     return tensor
 
     
-def SetupDiagrams(D):
+def setupDiagrams(D):
     """読み込んだダイアグラムリストからDiagramインスタンスのリストを作成"""
 
     Diagrams = []
@@ -92,88 +92,267 @@ def SetupDiagrams(D):
     return Diagrams    
 
 
-def FactorizeDiagrams(Diagrams):
-    """DiagramインスタンスのリストからDiagramGroupインスタンスのリストを作成"""
+#def FactorizeDiagrams(Diagrams):
+#    """DiagramインスタンスのリストからDiagramGroupインスタンスのリストを作成"""
+#
+#    DiagramGroups = []
+#
+#    # 一意なT1をリストアップ
+#    T1set = []
+#    for diagram in Diagrams:
+#        if not (diagram.T1 in T1set): T1set.append(diagram.T1)
+#
+#    # DiagramGroupインスタンスのリストを作成
+#    DGroups = []
+#    for T1 in T1set:
+#        DList = []
+#        for diagram in Diagrams:
+#            if diagram.T1 == T1: DList.append(diagram)
+#        DGroup = DiagramGroup(DList) # 初期化
+#        DGroup.setup()               # group内でfactorization
+#        DGroups.append(DGroup)
+#    
+#    return DGroups
 
-    DiagramGroups = []
+def factorizeDiagrams(Diagrams):
+    """Diagramsインスタンスのリストをfactorize"""
 
-    # 一意なT1をリストアップ
-    T1set = []
+    # 一意なテンソルをディクショナリ形式で抽出
+    Tdict = uniqueTensors(Diagrams)
+
+#    # 確認のため出力
+#    for T1 in Tdict[("root",)]:
+#        print(T1.show())
+#        for T2 in Tdict[("root",T1)]:
+#            print("---"+T2.show())
+#            for T3 in Tdict[("root",T1,T2)]:
+#                print("---"*2+T3.show())
+#                for T4 in Tdict[("root",T1,T2,T3)]:
+#                    print("---"*3+T4.show())
+#                    for T5 in Tdict[("root",T1,T2,T3,T4)]:
+#                        print("---"*4+T5.show())
+
+    # 上と同じことを再帰的に実行（練習用）
+    tmp(Tdict, ["root"], 0)
+
+
+    # Tdictを使って中間体をディクショナリ形式で定義
+    InterDict = defineIntermediates(Diagrams, Tdict)
+
+    # 確認のため出力
+    InterDict[("root",)].display()
+
+    return InterDict
+
+
+
+def tmp(Tdict, key, indent):
+    """Tdictのツリー構造を再帰的に出力"""
+
+    if len(key) > 5: return
+    for T in Tdict[tuple(key)]:
+        print("---"*indent, T.show())
+        key.append(T)
+        tmp(Tdict, key, indent+1)
+        key.pop()
+
+
+def uniqueTensors(Diagrams):
+    """一意なテンソルのディクショナリを返す"""
+
+    Tdict = {}
+
+    Tdict[("root",)] = []
     for diagram in Diagrams:
-        if not (diagram.T1 in T1set): T1set.append(diagram.T1)
+        if not diagram.T1 in Tdict[("root",)]: Tdict[("root",)].append(diagram.T1)
 
-    # DiagramGroupインスタンスのリストを作成
-    DGroups = []
-    for T1 in T1set:
-        DList = []
+    for T1 in Tdict[("root",)]:
+        Tdict[("root",T1)] = []
         for diagram in Diagrams:
-            if diagram.T1 == T1: DList.append(diagram)
-        DGroup = DiagramGroup(DList) # 初期化
-        DGroup.setup()               # group内でfactorization
-        DGroups.append(DGroup)
+            if diagram.T1 == T1:
+                if not diagram.T2 in Tdict[("root",T1)]:
+                    Tdict[("root",T1)].append(diagram.T2)
+
+    for T1 in Tdict[("root",)]:
+        for T2 in Tdict[("root",T1)]:
+            Tdict[("root",T1,T2)] = []
+            for diagram in Diagrams:
+                if diagram.T1 == T1 and diagram.T2 == T2:
+                    if not diagram.T3 in Tdict[("root",T1,T2)]:
+                        Tdict[("root",T1,T2)].append(diagram.T3)
+
+    for T1 in Tdict[("root",)]:
+        for T2 in Tdict[("root",T1)]:
+            for T3 in Tdict[("root",T1,T2)]:
+                Tdict[("root",T1,T2,T3)] = []
+                for diagram in Diagrams:
+                    if diagram.T1 == T1 and diagram.T2 == T2 and diagram.T3 == T3:
+                        if not diagram.T4 in Tdict[("root",T1,T2,T3)]:
+                            Tdict[("root",T1,T2,T3)].append(diagram.T4)
+
+    for T1 in Tdict[("root",)]:
+        for T2 in Tdict[("root",T1)]:
+            for T3 in Tdict[("root",T1,T2)]:
+                for T4 in Tdict[("root",T1,T2,T3)]:
+                    Tdict[("root",T1,T2,T3,T4)] = []
+                    for diagram in Diagrams:
+                        if diagram.T1 == T1 and diagram.T2 == T2 and diagram.T3 == T3 and diagram.T4 == T4:
+                            if not diagram.T5 in Tdict[("root",T1,T2,T3,T4)]:
+                                Tdict[("root",T1,T2,T3,T4)].append(diagram.T5)
+
+    return Tdict
+
+
+def defineIntermediates(Diagrams, Tdict):
+    """ダイグラムリストと一意なテンソルのディクショナリから、中間体を定義"""
+
+    InterDict = {}
+
+    I1list = []
+    for T1 in Tdict[("root",)]:
+        I2list = []
+        for T2 in Tdict[("root",T1)]:
+            I3list = []
+            for T3 in Tdict[("root",T1,T2)]:
+                I4list = []
+                for T4 in Tdict[("root",T1,T2,T3)]:
+                    I5list = []
+                    for T5 in Tdict[("root",T1,T2,T3,T4)]:
+                        tmp = Intermediate(None, T5)
+                        InterDict[("root",T1,T2,T3,T4,T5)] = tmp
+                        I5list.append(tmp)
+                    tmp = Intermediate(I5list, T4)
+                    InterDict[("root",T1,T2,T3,T4)] = tmp
+                    I4list.append(tmp)
+                tmp = Intermediate(I4list, T3)
+                InterDict[("root",T1,T2,T3)] = tmp
+                I3list.append(tmp)
+            tmp = Intermediate(I3list, T2)
+            InterDict[("root",T1,T2)] = tmp
+            I2list.append(tmp)
+        tmp = Intermediate(I2list, T1)
+        InterDict[("root",T1)] = tmp
+        I1list.append(tmp)
+    InterDict[("root",)] = Intermediate(I1list, None)
     
-    return DGroups
+
+    return InterDict
+    
+
+def generateCode(InterDict, fout):
+    """ソースコード生成"""
+
+    # 一時ファイルを定義
+    fout_tmp1 = open("header", "w")
+    fout_tmp2 = open("variables", "w")
+    fout_tmp3 = open("executions", "w")
+    tmpfileList = [fout_tmp1, fout_tmp2, fout_tmp3]
+
+    # ヘッダ（コメント、使用モジュール）
+#    genSrcHeader(fout_tmp1)
+
+    # メインコードを一時ファイルに書き出し（変数のリストも作成）
+    vList = genSrcExec(InterDict, ["root"], fout_tmp3)
+
+    # 変数定義を一時ファイルに書き出し
+    genSrcVar(vList, fout_tmp2)
+
+    # 一時ファイルを統合
 
 
-def InitArray(name, size):
+    # フッタ
+
+
+
+def genSrcExec(interDict, key, fout):
+    """メイン実行ソースを再帰的に生成"""
+
+    level = len(key)
+
+    name = "V"+str(level)
+    initArray(name, fout, level)
+    children = interDict[tuple(key)].children
+    if children == None:
+        return
+    else:
+        for child in children:
+            key.append(child.mytensor)
+            genSrcExec(interDict, key, fout)
+            key.pop()
+            contract(interDict[tuple(key)], fout, level)
+
+    
+    
+def initArray(name, fout, level):
     """配列初期化コードの生成"""
 
+    fout.write("---"*level+"Initialize "+name+"\n")
+
+
+def contract(inter, fout, level):
+    """Contraction"""
+
+    V1 = "V"+str(level)
+    V2 = "V"+str(level+1)
+    T1 = inter.mytensor.show()
+    fout.write("---"*level+V1+" += "+V2+"*"+T1+"\n")
     
 
-def Contraction(T1, T2, V):
-    """contraction: V += T1 * T2"""
-
-    # contractionのタイプごとに個別関数を実行
-    typ1 = T1.typ
-    typ2 = T2.typ
-
-    if   typ1 == "T" and (typ2 == "I" or typ2 == "IT"):
-        Contraction1(T1, T2, V)
-    elif typ1 == "" and typ2 == "":
-        #
-    elif typ1 == "" and typ2 == "":
-        #
-    elif typ1 == "" and typ2 == "":
-        #
-    elif typ1 == "" and typ2 == "":
-        #
-    elif typ1 == "" and typ2 == "":
-        #
-
-
-
-def Contraction1(T, W, V):
-    """T + IT type contraction"""
-
-    # W~ intermediate
-    nB = W.nC - V.nC
-    nJ = W.nK - V.nK
-    W_ = Tensor()
-    W_.setup(W.nA, W.nI, W.nC-nB, W.nK-nJ, nB, nJ, W.typ)
-    
-    # rearrange W
-    Rearrange(W, W_)
-
-    # contraction
-
-
-
-    
-
-def Contraction2(T1, T2, V):
-    """ type contraction"""
-
-    
-def Contraction3(T1, T2, V):
-    """ type contraction"""
-
-    
-def Contraction4(T1, T2, V):
-    """ type contraction"""
-
-    
-def rearrange(T1, T2):
-    """Rearrange tensor"""
-
-    if nI > 0: # write DO AddI = 1, LenStringOcc
-    if nA > 0: # write DO AddA = 1, LenStringVir
+#def contraction(T1, T2, V):
+#    """contraction: V += T1 * T2"""
+#
+#    # contractionのタイプごとに個別関数を実行
+#    typ1 = T1.typ
+#    typ2 = T2.typ
+#
+#    if   typ1 == "T" and (typ2 == "I" or typ2 == "IT"):
+#        Contraction1(T1, T2, V)
+#    elif typ1 == "" and typ2 == "":
+#        #
+#    elif typ1 == "" and typ2 == "":
+#        #
+#    elif typ1 == "" and typ2 == "":
+#        #
+#    elif typ1 == "" and typ2 == "":
+#        #
+#    elif typ1 == "" and typ2 == "":
+#        #
+#
+#
+#
+#def Contraction1(T, W, V):
+#    """T + IT type contraction"""
+#
+#    # W~ intermediate
+#    nB = W.nC - V.nC
+#    nJ = W.nK - V.nK
+#    W_ = Tensor()
+#    W_.setup(W.nA, W.nI, W.nC-nB, W.nK-nJ, nB, nJ, W.typ)
+#    
+#    # rearrange W
+#    Rearrange(W, W_)
+#
+#    # contraction
+#
+#
+#
+#    
+#
+#def Contraction2(T1, T2, V):
+#    """ type contraction"""
+#
+#    
+#def Contraction3(T1, T2, V):
+#    """ type contraction"""
+#
+#    
+#def Contraction4(T1, T2, V):
+#    """ type contraction"""
+#
+#    
+#def rearrange(T1, T2):
+#    """Rearrange tensor"""
+#
+#    if nI > 0: # write DO AddI = 1, LenStringOcc
+#    if nA > 0: # write DO AddA = 1, LenStringVir
+#

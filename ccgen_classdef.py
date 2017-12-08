@@ -11,6 +11,7 @@ class Tensor:
         self.nB = 0
         self.nJ = 0
         self.typ = ""
+        self.name = ""
 
         
     def setup(self, nA, nI, nC, nK, nB, nJ, typ):
@@ -21,6 +22,7 @@ class Tensor:
         self.nB = nB
         self.nJ = nJ
         self.typ = typ
+        self.name = typ+str(nA)+","+str(nI)+","+str(nC)+","+str(nK)
 
         
     def none(self):
@@ -47,6 +49,7 @@ class Tensor:
 
     def to_string(self):
         """出力用に文字列に変換"""
+
         return self.typ+str(self.nA)+","+str(self.nI)+","+str(self.nC)+","+str(self.nK)
 
 
@@ -55,34 +58,67 @@ class Tensor:
         return self.to_string()
 
 
+
+class Intermediate:
+    """Intermediate class"""
+
+    def __init__(self, children, tensor):
+        self.children = children   # list of child Intermediate instances
+        self.mytensor = tensor     # my Tensor intance
+        self.name = None
+        self.fingerprint = None
+
+        # define intermedieate type
+        self.typ = ""
+        if not children == None:
+            for child in children:
+                for c in child.typ:
+                    if self.typ.find(c) == -1:
+                        self.typ = self.typ + c
+
+
+    def display(self):
+        pass
+#        print(self.mytensor.to_string())
+#        if not self.children == None:
+#            for item in self.children:
+                
+        
+            
 class Diagram:
     """Diagram class"""
 
-    def __init__(self, T1, T2, T3, T4, T5, weight):
+    def __init__(self, T1, T2, T3, T4, T5, pw):
         self.T1 = T1
         self.T2 = T2
         self.T3 = T3
         self.T4 = T4
         self.T5 = T5
-#        self.weight = weight      # parity (sign) is involved
+        weight = 0.5**(abs(pw) - 1)
+        if pw < 0: weight = -weight
+        self.weight = weight      # parity (sign) is involved
 
         
     def compact(self):
         """000テンソルを削除し、左詰めにする"""
         if (self.T4.none) :
             self.T4 = self.T5
+            self.T5 = None
         if (self.T3.none):
             self.T3 = self.T4
             self.T4 = self.T5
+            self.T5 = None
         if (self.T2.none):
             self.T2 = self.T3
             self.T3 = self.T4
             self.T4 = self.T5
+            self.T5 = None
         if (self.T1.none):
             self.T1 = self.T2
             self.T2 = self.T3
             self.T3 = self.T4
             self.T4 = self.T5
+            self.T5 = None
 
         return self
 

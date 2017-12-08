@@ -31,28 +31,36 @@ elif ManifoldLv == 4: mainsrc += "t4_autogen.f90"
 fout = open(mainsrc, "w")
 
 # ソート済みダイアグラムのリストをファイルから読み込む
-D = ReadDiagrams("diagrams.sort")
+D = readDiagrams("diagrams.sort")
 
 # 読み込んだダイアグラムからインスタンス作成
-Diagrams = SetupDiagrams(D)
+Diagrams = setupDiagrams(D)
 
-# ダイグラムをfactorize
-DGroups = FactorizeDiagrams(Diagrams)
+# ダイアグラムをfactorize
+InterDict = factorizeDiagrams(Diagrams)
 
-# main loop #
-for DGroup in DGroups:
-    T1 = DGroup.T1
-    InitArray("V2", DGroup.V2size)
-    for T2 in DGroup.T2List:
-        InitArray("V3", DGroup.V3size[T1,T2])
-        for T3 in DGroup.T3Dict[T2]:
-            InitArray("V4", DGroup.V4size[T1,T2,T3])
-            for T4 in DGroup.T4Dict[(T2,T3)]:
-                T5 = DGroup.T5Dict[(T2,T3,T4)]
-                Contraction(T5, T4, V4)
-            Contraction(T4, T3, V3)
-        Contraction(T3, T2, V2)
-    Contraction(T2, T1, V1)
+                        
+# ソースコード生成
+generateCode(InterDict, fout)
+
+
+## ダイグラムをfactorize
+##DGroups = FactorizeDiagrams(Diagrams)
+#
+## main loop #
+#for DGroup in DGroups:
+#    T1 = DGroup.T1
+#    InitArray("V2", DGroup.V2size)
+#    for T2 in DGroup.T2List:
+#        InitArray("V3", DGroup.V3size[T1,T2])
+#        for T3 in DGroup.T3Dict[T2]:
+#            InitArray("V4", DGroup.V4size[T1,T2,T3])
+#            for T4 in DGroup.T4Dict[(T2,T3)]:
+#                T5 = DGroup.T5Dict[(T2,T3,T4)]
+#                Contraction(T5, T4, V4)
+#            Contraction(T4, T3, V3)
+#        Contraction(T3, T2, V2)
+#    Contraction(T2, T1, V1)
 
 
 # close main source file
