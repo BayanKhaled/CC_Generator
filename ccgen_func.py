@@ -92,27 +92,6 @@ def setupDiagrams(D):
     return Diagrams    
 
 
-#def FactorizeDiagrams(Diagrams):
-#    """DiagramインスタンスのリストからDiagramGroupインスタンスのリストを作成"""
-#
-#    DiagramGroups = []
-#
-#    # 一意なT1をリストアップ
-#    T1set = []
-#    for diagram in Diagrams:
-#        if not (diagram.T1 in T1set): T1set.append(diagram.T1)
-#
-#    # DiagramGroupインスタンスのリストを作成
-#    DGroups = []
-#    for T1 in T1set:
-#        DList = []
-#        for diagram in Diagrams:
-#            if diagram.T1 == T1: DList.append(diagram)
-#        DGroup = DiagramGroup(DList) # 初期化
-#        DGroup.setup()               # group内でfactorization
-#        DGroups.append(DGroup)
-#    
-#    return DGroups
 
 def factorizeDiagrams(Diagrams):
     """Diagramsインスタンスのリストをfactorize"""
@@ -155,6 +134,7 @@ def tmp(Tdict, key, indent):
         key.append(T)
         tmp(Tdict, key, indent+1)
         key.pop()
+
 
 
 def uniqueTensors(Diagrams):
@@ -255,7 +235,7 @@ def generateCode(InterDict, fout):
     vList = genSrcExec(InterDict, ["root"], fout_tmp3)
 
     # 変数定義を一時ファイルに書き出し
-    genSrcVar(vList, fout_tmp2)
+#    genSrcVar(vList, fout_tmp2)
 
     # 一時ファイルを統合
 
@@ -268,18 +248,18 @@ def genSrcExec(interDict, key, fout):
     """メイン実行ソースを再帰的に生成"""
 
     level = len(key)
-
-    name = "V"+str(level)
-    initArray(name, fout, level)
     children = interDict[tuple(key)].children
+
     if children == None:
         return
     else:
+        name = "V"+str(level)
+        initArray(name, fout, level)
         for child in children:
             key.append(child.mytensor)
             genSrcExec(interDict, key, fout)
             key.pop()
-            contract(interDict[tuple(key)], fout, level)
+            contract(child, fout, level)
 
     
     
@@ -289,13 +269,25 @@ def initArray(name, fout, level):
     fout.write("---"*level+"Initialize "+name+"\n")
 
 
+
 def contract(inter, fout, level):
-    """Contraction"""
+    """Contractionコードの生成"""
 
     V1 = "V"+str(level)
-    V2 = "V"+str(level+1)
-    T1 = inter.mytensor.show()
-    fout.write("---"*level+V1+" += "+V2+"*"+T1+"\n")
+    T1 = inter.mytensor
+    if inter.children == None:
+        # 下位の中間体が無い場合はmytensorを読み込む
+        task = " += "+T1.show()
+    else:
+        V2 = "V"+str(level+1)
+        if T1.zero():
+            # mytensorがゼロの場合は下位中間体をそのままコピー
+            task = " += "+V2
+        else:
+            # mytensorと下位中間体をcontract
+            task = " += "+V2+"*"+T1.show()
+                
+    fout.write("---"*level+V1+task+"\n")
     
 
 #def contraction(T1, T2, V):

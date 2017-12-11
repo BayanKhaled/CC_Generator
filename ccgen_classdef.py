@@ -25,9 +25,9 @@ class Tensor:
         self.name = typ+str(nA)+","+str(nI)+","+str(nC)+","+str(nK)
 
         
-    def none(self):
-        """6つのindexが全てゼロならnone（何もなし）"""
-        if (nA == 0 and nI == 0 and nC == 0 and nK == 0 and nB == 0 and nJ == 0):
+    def zero(self):
+        """6つのindexが全てゼロならzero（何もなし）"""
+        if (self.nA == 0 and self.nI == 0 and self.nC == 0 and self.nK == 0 and self.nB == 0 and self.nJ == 0):
             return True
         else:
             return False
@@ -101,19 +101,19 @@ class Diagram:
         
     def compact(self):
         """000テンソルを削除し、左詰めにする"""
-        if (self.T4.none) :
+        if (self.T4.zero) :
             self.T4 = self.T5
             self.T5 = None
-        if (self.T3.none):
+        if (self.T3.zero):
             self.T3 = self.T4
             self.T4 = self.T5
             self.T5 = None
-        if (self.T2.none):
+        if (self.T2.zero):
             self.T2 = self.T3
             self.T3 = self.T4
             self.T4 = self.T5
             self.T5 = None
-        if (self.T1.none):
+        if (self.T1.zero):
             self.T1 = self.T2
             self.T2 = self.T3
             self.T3 = self.T4
