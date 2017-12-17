@@ -36,9 +36,12 @@ class Tensor:
     def __eq__(self, T):
         """Tensorの==演算子"""
 
-        if (self.nA == T.nA and self.nI == T.nI and self.nC == T.nC and self.nK == T.nK and self.nB == T.nB and self.nJ == T.nJ and self.typ == T.typ):
-            return True
-        else:
+        try:
+            if (self.nA == T.nA and self.nI == T.nI and self.nC == T.nC and self.nK == T.nK and self.nB == T.nB and self.nJ == T.nJ and self.typ == T.typ):
+                return True
+            else:
+                return False
+        except AttributeError:  # Noneと比較された場合を想定
             return False
 
 
@@ -67,24 +70,66 @@ class Intermediate:
         self.mytensor = tensor     # my Tensor intance
         self.name = None
         self.fingerprint = None
+        self.contents = []
+        self.weight = 1
+        self.nA = 0
+        self.nI = 0
+        self.nC = 0
+        self.nK = 0
 
         # define intermedieate type
-        self.typ = ""
-        if not children == None:
+        if children == None:
+            self.contents.append(tensor.typ)
+        else:
             for child in children:
-                for c in child.typ:
-                    if self.typ.find(c) == -1:
-                        self.typ = self.typ + c
+                for c in child.contents:
+                    self.contents.append(c)
+            if not tensor == None:
+                self.contents.append(tensor.typ)
+        # ソートして文字列にする
+        self.contents.sort()
+        self.typ = "".join(self.contents)
+
+#        # 重み因子（パリティ含む）
+        
+        # intermediate indices (とりあえずエネルギー計算のみ)
+        if children == None:
+            self.nA = tensor.nA
+            self.nI = tensor.nI
+            self.nC = tensor.nC
+            self.nK = tensor.nK
+        elif tensor == None:
+            self.nA = self.children[0].nA
+            self.nI = self.children[0].nI
+            self.nC = self.children[0].nC
+            self.nK = self.children[0].nK
+        else:
+            self.nA = self.children[0].nA + tensor.nA
+            self.nI = self.children[0].nI + tensor.nI
+            self.nC = self.children[0].nC - tensor.nC
+            self.nK = self.children[0].nK - tensor.nK
+
+        print(self.display())
+            
+
+    def to_string(self):
+        """出力用に文字列に変換"""
+
+        return self.typ+str(self.nA)+","+str(self.nI)+","+str(self.nC)+","+str(self.nK)
 
 
     def display(self):
-        pass
-#        print(self.mytensor.to_string())
-#        if not self.children == None:
-#            for item in self.children:
-                
+        """確認用の出力関数"""
+
+        string = ""
+        if self.children != None:
+            for child in self.children:
+                string += child.to_string() + ", "
+
+        return "inter. "+self.to_string()+" contains ["+string+"]"
         
-            
+                        
+                    
 class Diagram:
     """Diagram class"""
 
@@ -150,71 +195,3 @@ class Diagram:
         
 
 
-class DiagramGroup:
-    """Factorized diagram group"""
-
-    def __init__(self, DiagramList):
-        self.DiagramList = DiagramList
-        self.nDiagram = len(DiagramList)
-
-        
-    def __setupIntermediates__(self):
-        """ダイアグラム中のゼロテンソルを削除し、左詰め"""
-        for diagram in self.DiagramList:
-            diagram = diagram.compact()
-
-
-    def setup(self):
-        """ インスタンス内でFactorizationを行い、メンバ変数を決定
-        __init__の一部にしてもいいかも"""
-
-        # T1を取得
-        self.T1 = self.DiagramList[0].T1
-
-        # 一意なT2のリストを取得
-        self.T2List = []
-        for diagram in self.DiagramList:
-            if not diagram.T2 in self.T2List: self.T2List.append(diagram.T2)
-
-        # 一意なT3のディクショナリを作成
-        self.T3Dict = {}
-        for T2 in self.T2List:
-            self.T3Dict[T2] = []
-            for diagram in self.DiagramList:
-                if diagram.T2 == T2:
-                    if not diagram.T3 in self.T3Dict[T2]:
-                        self.T3Dict[T2].append(diagram.T3)
-
-        # 一意なT4のディクショナリを作成
-        self.T4Dict = {}
-        for T2 in self.T2List:
-            for T3 in self.T3Dict[T2]:
-                self.T4Dict[(T2,T3)] = []
-                for diagram in self.DiagramList:
-                    if diagram.T2 == T2 and diagram.T3 == T3:
-                        if not diagram.T4 in self.T4Dict[(T2,T3)]:
-                            self.T4Dict[(T2,T3)].append(diagram.T4)
-
-        # 一意なT5のディクショナリを作成
-        self.T5Dict = {}
-        for T2 in self.T2List:
-            for T3 in self.T3Dict[T2]:
-                for T4 in self.T4Dict[(T2,T3)]:
-                    self.T5Dict[(T2,T3,T4)] = []
-                    for diagram in self.DiagramList:
-                        if diagram.T2 == T2 and diagram.T3 == T3 and diagram.T4 == T4:
-                            if not diagram.T5 in self.T5Dict[(T2,T3,T4)]:
-                                self.T5Dict[(T2,T3,T4)].append(diagram.T5)
-
-        # 結果確認（デバッグ用）
-        print(self.T1.show())
-        for T2 in self.T2List:
-            print("---"+T2.show())
-            for T3 in self.T3Dict[T2]:
-                print("------"+T3.show())
-                for T4 in self.T4Dict[(T2,T3)]:
-                    print("---------"+T4.show())
-                    for T5 in self.T5Dict[(T2,T3,T4)]:
-                        print("------------"+T5.show())
-        
-       

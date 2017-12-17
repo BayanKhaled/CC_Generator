@@ -38,7 +38,7 @@ def SetupTensor(T):
         elif T == 2:
             tensor.setup(0,1,0,1,0,0,"G")
         elif T == 3:
-            tensor.setup(1,1,0,0,0,0,"G")
+            tensor.setup(0,0,1,1,0,0,"G")
         elif T == 4:
             tensor.setup(2,0,2,0,0,0,"G")
         elif T == 5:
@@ -46,25 +46,26 @@ def SetupTensor(T):
         elif T == 6:
             tensor.setup(1,1,1,1,0,0,"G")
         elif T == 7:
-            tensor.setup(2,1,1,0,0,0,"G")
-        elif T == 8:
-            tensor.setup(1,2,0,1,0,0,"G")
-        elif T == 9:
             tensor.setup(1,0,2,1,0,0,"G")
-        elif T == 10:
+        elif T == 8:
             tensor.setup(0,1,1,2,0,0,"G")
+        elif T == 9:
+            tensor.setup(2,1,1,0,0,0,"G")
+        elif T == 10:
+            tensor.setup(1,2,0,1,0,0,"G")
         elif T == 11:
-            tensor.setup(2,2,0,0,0,0,"G")
-        elif T == 12:
-            tensor.setup(0,0,1,1,0,0,"G")
-        elif T == 13:
             tensor.setup(0,0,2,2,0,0,"G")
+        elif T == 12:
+            tensor.setup(1,1,0,0,0,0,"G")
+        elif T == 13:
+            tensor.setup(2,2,0,0,0,0,"G")
 #        elif T < 0:
 #            # Lambda amplitude in response density-matrix
     elif len(T) == 3:  # T or lambda amplitude
         for i in range(3):
             T[i] = int(T[i])
         if T[0] < 0: typ = "L"
+        elif T[0] == 0: typ = ""
         else: typ = "T"
         nC = T[2]
         nK = T[1] - T[2]
@@ -119,7 +120,7 @@ def factorizeDiagrams(Diagrams):
     InterDict = defineIntermediates(Diagrams, Tdict)
 
     # 確認のため出力
-    InterDict[("root",)].display()
+#    InterDict[("root",)].display()
 
     return InterDict
 
@@ -219,6 +220,7 @@ def defineIntermediates(Diagrams, Tdict):
     return InterDict
     
 
+
 def generateCode(InterDict, fout):
     """ソースコード生成"""
 
@@ -248,47 +250,96 @@ def genSrcExec(interDict, key, fout):
     """メイン実行ソースを再帰的に生成"""
 
     level = len(key)
-    children = interDict[tuple(key)].children
+    myself = interDict[tuple(key)]  # current intermediate
+    children = myself.children      # children of current intermediate
 
     if children == None:
         return
     else:
         name = "V"+str(level)
-        initArray(name, fout, level)
+        initArray(myself, name, fout, level)
         for child in children:
             key.append(child.mytensor)
             genSrcExec(interDict, key, fout)
             key.pop()
-            contract(child, fout, level)
+            contraction(child, fout, level)
+
+    return
+
 
     
-    
-def initArray(name, fout, level):
+def initArray(inter, name, fout, level):
     """配列初期化コードの生成"""
 
-    fout.write("---"*level+"Initialize "+name+"\n")
+    fout.write("---"*level+"Initialize "+name+"("+inter.to_string()+")"+"\n")
+
+    # 配列の動的確保とNTChemの配列ゼロクリアルーチン（配列の名前とサイズが必要）
 
 
-
-def contract(inter, fout, level):
+def contraction(inter, fout, level):
     """Contractionコードの生成"""
 
-    V1 = "V"+str(level)
+    V1 =   "V"+str(level)+"("+inter.typ+")" #inter.to_string()
     T1 = inter.mytensor
-    if inter.children == None:
-        # 下位の中間体が無い場合はmytensorを読み込む
+    if inter.children == None:   # 下位の中間体が無い場合はmytensorを読み込む
         task = " += "+T1.show()
     else:
-        V2 = "V"+str(level+1)
-        if T1.zero():
-            # mytensorがゼロの場合は下位中間体をそのままコピー
+        V2 =  "V"+str(level+1) + "(" + inter.children[0].to_string() + ")"
+        if T1.zero(): # mytensorがゼロの場合は下位中間体をそのままコピー
             task = " += "+V2
-        else:
-            # mytensorと下位中間体をcontract
+        else: # mytensorと下位中間体をcontract            
             task = " += "+V2+"*"+T1.show()
                 
     fout.write("---"*level+V1+task+"\n")
     
+
+
+def contraction_kernel(V1, V2, T):
+    """Contraction: V += V2 * T"""
+
+    # とりあえずエネルギー方程式（GT + Tタイプ）
+
+    # decide if rearrangement is needed
+    
+    # rearrange V2
+    # open subroutine file
+
+    # Io loop
+    # Ao loop
+    # load V2(:,:,Ao,Io)
+    # J loop
+    # B loop
+    # K loop
+    # C loop
+    # V2'(C,K,B,J,Ao,Io) = V2(CB,KJ,Ao,Io)
+    # close c, K, B, J loops
+    # save V2'(:,:,:,:,Ao,Io)
+    # close Ao, Io loops
+
+    # close subroutine file
+
+    # contract
+
+    # open subroutine file
+    
+    # It loop
+    # At loop
+    # initialize F
+    # J loop
+    # B loop
+    # make F from T
+    # B loop end
+    # J loop end
+    # Io loop
+    # Ao loop
+    # V1 += V2 * F
+    # Ao loop end
+    # Io loop end
+    # At loop end
+    # It loop end
+
+    # close subroutine file
+
 
 #def contraction(T1, T2, V):
 #    """contraction: V += T1 * T2"""
