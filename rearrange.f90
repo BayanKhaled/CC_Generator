@@ -1,54 +1,60 @@
 subroutine rearrange(nIo, nAo, nJ, nB, nK, nC, name_V, name_V_)
 
-  use CC_Module, only : NOc, NVr, NOcA, NVrA
-  
+  use CC_Module, only : NOc, NVr
+  use String_Module, only : MapOcc, MapVir, NumStringOcc, NumStringVir
   implicit none
 
+  ! Formal
   integer, intent(in) :: nIo, nAo, nJ, nB, nK, nC
   character(128), intent(in) :: name_V, name_V_
+  ! Local
+  integer :: size2, size2_
+  integer :: IoLen, AoLen, JLen, BLen, KLen, CLen
+  integer :: IoAdd, AoAdd, loc, JAdd, BAdd, KAdd, CAdd, KJAdd, CBAdd
+  real(8) :: Fac, Fac0
+  real(8), allocatable :: V2(:), V2_(:)
 
 
-  allocate(Jstring(nJ))
-  allocate(Bstring(nB))
-  allocate(Kstring(nK))
-  allocate(Cstring(nC))
-  allocate(KJstring(nK+nJ))
-  allocate(CBstring(nC+nB))
-
-  IoLen = stringLengthOcc(nIo)
-  AoLen = stringLengthVir(nAo)
-  JLen  = stringLengthOcc(nJ)
-  BLen  = stringLengthVir(nB)
-  KLen  = stringLengthOcc(nK)
-  CLen  = stringLengthVir(nC)
-
-  size2  = C(NOc, nK+nJ) * C(NVr, nB+nC)
-  size2_ = C(nOc, nK) * C(NOc, nJ) * C(NVr, nB) * C(NVr, nC)
+  IoLen = NumStringOcc(nIo)
+  AoLen = NumStringVir(nAo)
+  JLen  = NumStringOcc(nJ)
+  BLen  = NumStringVir(nB)
+!  KLen = MapOcc(nK,nJ)%length
+!  CLen = MapVir(nC,nB)%length
+  KLen = NumStringOcc(nK)
+  CLen = NumStringVir(nC)
   
-  open(unit=io1, file=trim(name_V), access="direct", recl=size2*8, form="unformatted")
-  open(unit=io2, file=trim(name_V_), access="direct", recl=size2_*8, form="unformatted")
+
+  size2  = CCLib_NComb(NOc, nK+nJ) * CCLib_NComb(NVr, nB+nC)
+  size2_ = CCLib_NComb(nOc, nK) * CCLib_NComb(NOc, nJ) * &
+           CCLib_NComb(NVr, nB) * CCLib_NComb(NVr, nC)
+
+  allocate(V2(size2))
+  allocate(V2_(size2_))
+  
+  open(unit=io1, file=trim(name_V), access="direct", recl=size2*8, &
+       form="unformatted", status="old")
+  open(unit=io2, file=trim(name_V_), access="direct", recl=size2_*8, &
+       form="unformatted", status="unknown")
 
   do IoAdd = 1, IoLen
      do AoAdd = 1, AoLen
-        loc = (IoAdd - 1) * stringLengthVir(nAo) + AoAdd
+        loc = (IoAdd - 1) * AoLen + AoAdd
         ! load V2(*,Ao,Io)
         read(io1, rec=loc) V2(1:size2)
-
-        do JAdd = 1, stringLengthOcc(nJ)
-           ! load J string
-           Jstring = 
-           do BAdd = 1, stringLengthVir(nB)
-              ! load B string
-              Bstring = 
-              do KAdd = 1, stringLengthOcc(nK)
-                 ! load K string
-                 Kstring = 
-                 ! merge K and J; get address
-                 do CAdd = 1, stringLengthVir(nC)
-                    ! load C string
-                    Cstring = 
-                    ! merge C and B; get address
-                    V2_(CAdd,KAdd,BAdd,JAdd) = V2(CBAdd, KJAdd) * Fac
+        do JAdd = 1, JLen
+           do BAdd = 1, BLen
+              do KAdd = 1, KLen
+                 ! address and parity of KJ string
+                 KJAdd = MapOcc(nK,nJ)%map(KAdd,JAdd)
+                 if (KJAdd == 0) cycle
+                 Fac0 = sgn(1, kJAdd)
+                 do CAdd = 1, CLen
+                    ! address and parity of CB string
+                    CBAdd = MapVir(nC,nB)%map(CAdd,BAdd)
+                    if (CBAdd == 0) cycle
+                    Fac = Fac0 * sgn(1, CBAdd)
+                    V2_(CAdd,KAdd,BAdd,JAdd) = V2(ABS(CBAdd),ABS(KJAdd)) * Fac
                  end do
               end do
            end do
@@ -61,5 +67,7 @@ subroutine rearrange(nIo, nAo, nJ, nB, nK, nC, name_V, name_V_)
 
   close(io2)
   close(io1)
+  deallocate(V2)
+  deallocate(V2_)
 
 end subroutine rearrange

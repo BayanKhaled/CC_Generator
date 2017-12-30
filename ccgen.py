@@ -1,4 +1,4 @@
-# codeing: utf-8
+# coding: utf-8
 import sys
 from ccgen_func import *
 from ccgen_classdef import *

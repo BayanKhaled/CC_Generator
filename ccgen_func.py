@@ -1,4 +1,4 @@
-# codeing: utf-8
+# coding: utf-8
 from ccgen_classdef import *
 
 """関数群"""
@@ -257,7 +257,7 @@ def genSrcExec(interDict, key, fout):
         return
     else:
         name = "V"+str(level)
-        initArray(myself, name, fout, level)
+#        initArray(myself, name, fout, level)
         for child in children:
             key.append(child.mytensor)
             genSrcExec(interDict, key, fout)
@@ -277,7 +277,7 @@ def initArray(inter, name, fout, level):
 
 
 def contraction(inter, fout, level):
-    """Contractionコードの生成"""
+    """Contractionコードの呼び出し"""
 
     V1 =   "V"+str(level)+"("+inter.typ+")" #inter.to_string()
     T1 = inter.mytensor
@@ -301,22 +301,8 @@ def contraction_kernel(V1, V2, T):
 
     # decide if rearrangement is needed
     
-    # rearrange V2
-    # open subroutine file
-
-    # Io loop
-    # Ao loop
-    # load V2(:,:,Ao,Io)
-    # J loop
-    # B loop
-    # K loop
-    # C loop
-    # V2'(C,K,B,J,Ao,Io) = V2(CB,KJ,Ao,Io)
-    # close c, K, B, J loops
-    # save V2'(:,:,:,:,Ao,Io)
-    # close Ao, Io loops
-
-    # close subroutine file
+    # if needed: call rearrange routine
+    # get name of (rearranged) intermediate file
 
     # contract
 
