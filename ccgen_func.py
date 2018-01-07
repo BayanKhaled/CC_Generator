@@ -257,7 +257,7 @@ def genSrcExec(interDict, key, fout):
         return
     else:
         name = "V"+str(level)
-#        initArray(myself, name, fout, level)
+        initArray(myself, name, fout, level)
         for child in children:
             key.append(child.mytensor)
             genSrcExec(interDict, key, fout)
@@ -271,9 +271,18 @@ def genSrcExec(interDict, key, fout):
 def initArray(inter, name, fout, level):
     """配列初期化コードの生成"""
 
-    fout.write("---"*level+"Initialize "+name+"("+inter.to_string()+")"+"\n")
+    fout.write("---"*level+"OPEN(unit=IO"+str(level)+", file=\""+name+"\", access=\"direct\", status=\"unknown\")\n")
 
-    # 配列の動的確保とNTChemの配列ゼロクリアルーチン（配列の名前とサイズが必要）
+#    fout.w_alloc(array, size)
+#    fout.w_open(unit=IO, level=level, filename=name, recl=recl)
+#    fout.w_read(unit=IO, array, loc)
+#    fout.w_zero(array, size)
+#    fout_w_write(unit=IO, level=level, filename=name)
+#    fout.w_close(IO)
+#    fout.w_dealloc(array)
+
+#    fout.write("---"*level+"Initialize "+name+"("+inter.to_string()+")"+"\n")
+
 
 
 def contraction(inter, fout, level):

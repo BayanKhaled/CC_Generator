@@ -70,7 +70,7 @@ class Intermediate:
         self.mytensor = tensor     # my Tensor intance
         self.name = None
         self.fingerprint = None
-        self.contents = []
+        self.contents = []         # 
         self.weight = 1
         self.nA = 0
         self.nI = 0
@@ -90,7 +90,8 @@ class Intermediate:
         self.contents.sort()
         self.typ = "".join(self.contents)
 
-#        # 重み因子（パリティ含む）
+#        # 重み因子（パリティ含む)
+
         
         # intermediate indices (とりあえずエネルギー計算のみ)
         if children == None:
