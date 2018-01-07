@@ -65,10 +65,11 @@ class Tensor:
 class Intermediate:
     """Intermediate class"""
 
-    def __init__(self, children, tensor):
+    def __init__(self, children, tensor, level):
         self.children = children   # list of child Intermediate instances
         self.mytensor = tensor     # my Tensor intance
-        self.name = None
+        self.level = level         # level of the intermediate
+        self.name = "V"+str(level)
         self.fingerprint = None
         self.contents = []         # 
         self.weight = 1

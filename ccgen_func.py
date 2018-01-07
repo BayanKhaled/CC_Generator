@@ -199,22 +199,22 @@ def defineIntermediates(Diagrams, Tdict):
                 for T4 in Tdict[("root",T1,T2,T3)]:
                     I5list = []
                     for T5 in Tdict[("root",T1,T2,T3,T4)]:
-                        tmp = Intermediate(None, T5)
+                        tmp = Intermediate(None, T5, 6)
                         InterDict[("root",T1,T2,T3,T4,T5)] = tmp
                         I5list.append(tmp)
-                    tmp = Intermediate(I5list, T4)
+                    tmp = Intermediate(I5list, T4, 5)
                     InterDict[("root",T1,T2,T3,T4)] = tmp
                     I4list.append(tmp)
-                tmp = Intermediate(I4list, T3)
+                tmp = Intermediate(I4list, T3, 4)
                 InterDict[("root",T1,T2,T3)] = tmp
                 I3list.append(tmp)
-            tmp = Intermediate(I3list, T2)
+            tmp = Intermediate(I3list, T2, 3)
             InterDict[("root",T1,T2)] = tmp
             I2list.append(tmp)
-        tmp = Intermediate(I2list, T1)
+        tmp = Intermediate(I2list, T1, 2)
         InterDict[("root",T1)] = tmp
         I1list.append(tmp)
-    InterDict[("root",)] = Intermediate(I1list, None)
+    InterDict[("root",)] = Intermediate(I1list, None, 1)
     
 
     return InterDict
@@ -234,7 +234,7 @@ def generateCode(InterDict, fout):
 #    genSrcHeader(fout_tmp1)
 
     # メインコードを一時ファイルに書き出し（変数のリストも作成）
-    vList = genSrcExec(InterDict, ["root"], fout_tmp3)
+    vList = genSrcExec(InterDict[("root",)], fout_tmp3)
 
     # 変数定義を一時ファイルに書き出し
 #    genSrcVar(vList, fout_tmp2)
@@ -246,31 +246,28 @@ def generateCode(InterDict, fout):
 
 
 
-def genSrcExec(interDict, key, fout):
+def genSrcExec(inter, fout):
     """メイン実行ソースを再帰的に生成"""
 
-    level = len(key)
-    myself = interDict[tuple(key)]  # current intermediate
-    children = myself.children      # children of current intermediate
+    children = inter.children
 
     if children == None:
         return
     else:
-        name = "V"+str(level)
-        initArray(myself, name, fout, level)
+        initArray(inter, fout)
         for child in children:
-            key.append(child.mytensor)
-            genSrcExec(interDict, key, fout)
-            key.pop()
-            contraction(child, fout, level)
+            genSrcExec(child, fout)
+            contraction(child, fout)
 
     return
 
 
     
-def initArray(inter, name, fout, level):
+def initArray(inter, fout):
     """配列初期化コードの生成"""
 
+    level = inter.level
+    name = inter.name
     fout.write("---"*level+"OPEN(unit=IO"+str(level)+", file=\""+name+"\", access=\"direct\", status=\"unknown\")\n")
 
 #    fout.w_alloc(array, size)
@@ -285,15 +282,16 @@ def initArray(inter, name, fout, level):
 
 
 
-def contraction(inter, fout, level):
+def contraction(inter, fout):
     """Contractionコードの呼び出し"""
 
-    V1 =   "V"+str(level)+"("+inter.typ+")" #inter.to_string()
+    level = inter.level
+    V1 =   "V"+str(level-1)+"("+inter.typ+")" #inter.to_string()
     T1 = inter.mytensor
     if inter.children == None:   # 下位の中間体が無い場合はmytensorを読み込む
         task = " += "+T1.show()
     else:
-        V2 =  "V"+str(level+1) + "(" + inter.children[0].to_string() + ")"
+        V2 =  inter.name + "(" + inter.children[0].to_string() + ")"
         if T1.zero(): # mytensorがゼロの場合は下位中間体をそのままコピー
             task = " += "+V2
         else: # mytensorと下位中間体をcontract            
