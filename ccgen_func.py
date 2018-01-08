@@ -286,12 +286,12 @@ def contraction(inter, fout):
     """Contractionコードの呼び出し"""
 
     level = inter.level
-    V1 =   "V"+str(level-1)+"("+inter.typ+")" #inter.to_string()
+    V1 =   inter.name + "("+inter.typ+")" #inter.to_string()
     T1 = inter.mytensor
     if inter.children == None:   # 下位の中間体が無い場合はmytensorを読み込む
         task = " += "+T1.show()
     else:
-        V2 =  inter.name + "(" + inter.children[0].to_string() + ")"
+        V2 =  inter.children[0].name + "(" + inter.children[0].to_string() + ")"
         if T1.zero(): # mytensorがゼロの場合は下位中間体をそのままコピー
             task = " += "+V2
         else: # mytensorと下位中間体をcontract            

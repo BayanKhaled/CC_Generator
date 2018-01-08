@@ -69,7 +69,7 @@ class Intermediate:
         self.children = children   # list of child Intermediate instances
         self.mytensor = tensor     # my Tensor intance
         self.level = level         # level of the intermediate
-        self.name = "V"+str(level)
+        self.name = "V"+str(level-1)
         self.fingerprint = None
         self.contents = []         # 
         self.weight = 1
